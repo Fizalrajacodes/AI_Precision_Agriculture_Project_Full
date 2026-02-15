@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Precision Agriculture Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+         :root {
+            --primary: #2e7d32;
+            --primary-light: #4caf50;
+            --primary-dark: #1b5e20;
+            --secondary: #ff9800;
+            --danger: #f44336;
+            --warning: #ffc107;
+            --info: #2196f3;
+            --light: #f5f5f5;
+            --dark: #212121;
+            --gray: #757575;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f9f5;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .last-update {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        
+        .card-icon {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+        
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .card-unit {
+            font-size: 1rem;
+            color: var(--gray);
+        }
+        
+        .card-status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-normal {
+            background-color: #e8f5e9;
+            color: var(--primary);
+        }
+        
+        .status-warning {
+            background-color: #fff8e1;
+            color: var(--warning);
+        }
+        
+        .status-danger {
+            background-color: #ffebee;
+            color: var(--danger);
+        }
+        
+        .chart-container {
+            grid-column: span 2;
+            height: 300px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e68900;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .alerts {
+            background-color: #fff3e0;
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .alert-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .alert-list {
+            list-style-type: none;
+        }
+        
+        .alert-item {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+        
+        .alert-icon {
+            color: var(--warning);
+        }
+        
+        .recommendations {
+            background-color: #e8f5e9;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .recommendation-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .recommendation-list {
+            list-style-type: none;
+        }
+        
+        .recommendation-item {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .recommendation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .recommendation-icon {
+            color: var(--primary);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            .chart-container {
+                grid-column: span 1;
+            }
+            .controls {
+                flex-direction: column;
+            }
+            .control-group {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-seedling"></i>
+                </div>
+                <div>
+                    <h1>AI Precision Agriculture Dashboard</h1>
+                    <p class="last-update">Last updated: <span id="lastUpdateTime">--</span></p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <button class="btn btn-primary" id="overviewBtn">
+                    <i class="fas fa-chart-pie"></i> Overview
+                </button>
+                <button class="btn btn-outline" id="analyticsBtn">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </button>
+                <button class="btn btn-outline" id="predictionsBtn">
+                    <i class="fas fa-crystal-ball"></i> Predictions
+                </button>
+            </div>
+            <div class="control-group">
+                <button class="btn btn-outline" id="settingsBtn">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+                <button class="btn btn-secondary" id="exportBtn">
+                    <i class="fas fa-download"></i> Export Data
+                </button>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Temperature</div>
+                    <div class="card-icon">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                </div>
+                <div class="card-value" id="temperatureValue">--</div>
+                <div class="card-unit">°C</div>
+                <div class="card-status status-normal" id="temperatureStatus">Normal</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Humidity</div>
+                    <div class="card-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                </div>
+                <div class="card-value" id="humidityValue">--</div>
+                <div class="card-unit">%</div>
+                <div class="card-status status-normal" id="humidityStatus">Normal</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Soil Moisture</div>
+                    <div class="card-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                </div>
+                <div class="card-value" id="soilValue">--</div>
+                <div class="card-unit">%</div>
+                <div class="card-status status-normal" id="soilStatus">Normal</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Light Intensity</div>
+                    <div class="card-icon">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                </div>
+                <div class="card-value" id="lightValue">--</div>
+                <div class="card-unit">lux</div>
+                <div class="card-status status-normal" id="lightStatus">Normal</div>
+            </div>
+
+            <div class="card chart-container">
+                <div class="card-header">
+                    <div class="card-title">Environmental Trends</div>
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="alerts">
+            <div class="alert-title">
+                <i class="fas fa-exclamation-triangle alert-icon"></i> Active Alerts
+            </div>
+            <ul class="alert-list" id="alertList">
+                <li class="alert-item">
+                    <i class="fas fa-info-circle alert-icon"></i> No active alerts at this time.
+                </li>
+            </ul>
+        </div>
+
+        <div class="recommendations">
+            <div class="recommendation-title">
+                <i class="fas fa-lightbulb recommendation-icon"></i> AI Recommendations
+            </div>
+            <ul class="recommendation-list" id="recommendationList">
+                <li class="recommendation-item">
+                    <i class="fas fa-check-circle recommendation-icon"></i> All parameters are within optimal ranges.
+                </li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>AI Precision Agriculture Dashboard &copy; 2023 | Powered by IoT & Machine Learning</p>
+        </footer>
+    </div>
+
+    <script>
+        // Configuration
+        const channelID = "3110245";
+        const readAPIKey = "WG3K9LPAS7DBGDU7";
+        const updateInterval = 15000; // 15 seconds
+
+        // DOM Elements
+        const temperatureValue = document.getElementById('temperatureValue');
+        const humidityValue = document.getElementById('humidityValue');
+        const soilValue = document.getElementById('soilValue');
+        const lightValue = document.getElementById('lightValue');
+        const lastUpdateTime = document.getElementById('lastUpdateTime');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const alertList = document.getElementById('alertList');
+        const recommendationList = document.getElementById('recommendationList');
+        const trendChartCanvas = document.getElementById('trendChart');
+
+        // Status elements
+        const temperatureStatus = document.getElementById('temperatureStatus');
+        const humidityStatus = document.getElementById('humidityStatus');
+        const soilStatus = document.getElementById('soilStatus');
+        const lightStatus = document.getElementById('lightStatus');
+
+        // Chart instance
+        let trendChart;
+
+        // Initialize the dashboard
+        function initDashboard() {
+            fetchData();
+            setInterval(fetchData, updateInterval);
+            setupEventListeners();
+            initializeChart();
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            refreshBtn.addEventListener('click', fetchData);
+
+            // Add event listeners for other buttons
+            document.getElementById('overviewBtn').addEventListener('click', () => {
+                alert('Overview view would be displayed here');
+            });
+
+            document.getElementById('analyticsBtn').addEventListener('click', () => {
+                alert('Analytics view would be displayed here');
+            });
+
+            document.getElementById('predictionsBtn').addEventListener('click', () => {
+                alert('Predictions view would be displayed here');
+            });
+
+            document.getElementById('settingsBtn').addEventListener('click', () => {
+                alert('Settings panel would open here');
+            });
+
+            document.getElementById('exportBtn').addEventListener('click', () => {
+                alert('Data export functionality would be triggered here');
+            });
+        }
+
+        // Initialize the trend chart
+        function initializeChart() {
+            const ctx = trendChartCanvas.getContext('2d');
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: [],
+                        borderColor: '#f44336',
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Humidity (%)',
+                        data: [],
+                        borderColor: '#2196f3',
+                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Soil Moisture (%)',
+                        data: [],
+                        borderColor: '#4caf50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Light Intensity (lux)',
+                        data: [],
+                        borderColor: '#ff9800',
+                        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Environmental Data Over Time'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update the trend chart with new data
+        function updateChart(time, temp, humidity, soil, light) {
+            // Add new data point
+            trendChart.data.labels.push(time);
+
+            // Limit to 10 data points for better visualization
+            if (trendChart.data.labels.length > 10) {
+                trendChart.data.labels.shift();
+                trendChart.data.datasets[0].data.shift();
+                trendChart.data.datasets[1].data.shift();
+                trendChart.data.datasets[2].data.shift();
+                trendChart.data.datasets[3].data.shift();
+            }
+
+            // Add new values
+            trendChart.data.datasets[0].data.push(temp);
+            trendChart.data.datasets[1].data.push(humidity);
+            trendChart.data.datasets[2].data.push(soil);
+            trendChart.data.datasets[3].data.push(light);
+
+            // Update the chart
+            trendChart.update();
+        }
+
+        // Fetch data from ThingSpeak
+        async function fetchData() {
+            try {
+                const response = await fetch(`https://api.thingspeak.com/channels/${channelID}/feeds.json?api_key=${readAPIKey}&results=2`);
+                const data = await response.json();
+
+                if (data.feeds && data.feeds.length > 0) {
+                    const feed = data.feeds[0];
+                    const timestamp = new Date(feed.created_at).toLocaleTimeString();
+
+                    // Update values
+                    temperatureValue.textContent = feed.field1 || "--";
+                    humidityValue.textContent = feed.field2 || "--";
+                    soilValue.textContent = feed.field3 || "--";
+                    lightValue.textContent = feed.field4 || "--";
+
+                    // Update last update time
+                    lastUpdateTime.textContent = timestamp;
+
+                    // Update status indicators
+                    updateStatusIndicators(feed);
+
+                    // Update alerts and recommendations
+                    updateAlerts(feed);
+                    updateRecommendations(feed);
+
+                    // Update chart
+                    updateChart(
+                        timestamp,
+                        parseFloat(feed.field1) || 0,
+                        parseFloat(feed.field2) || 0,
+                        parseFloat(feed.field3) || 0,
+                        parseFloat(feed.field4) || 0
+                    );
+                }
+            } catch (error) {
+                console.error("Error fetching ThingSpeak data:", error);
+                alertList.innerHTML = `
+                    <li class="alert-item">
+                        <i class="fas fa-exclamation-triangle alert-icon"></i>
+                        Failed to fetch data from sensors. Please check your connection.
+                    </li>
+                `;
+            }
+        }
+
+        // Update status indicators based on sensor values
+        function updateStatusIndicators(feed) {
+            const temp = parseFloat(feed.field1);
+            const humidity = parseFloat(feed.field2);
+            const soil = parseFloat(feed.field3);
+            const light = parseFloat(feed.field4);
+
+            // Temperature status
+            if (temp < 15) {
+                temperatureStatus.textContent = "Too Low";
+                temperatureStatus.className = "card-status status-warning";
+            } else if (temp > 30) {
+                temperatureStatus.textContent = "Too High";
+                temperatureStatus.className = "card-status status-danger";
+            } else {
+                temperatureStatus.textContent = "Normal";
+                temperatureStatus.className = "card-status status-normal";
+            }
+
+            // Humidity status
+            if (humidity < 40) {
+                humidityStatus.textContent = "Too Low";
+                humidityStatus.className = "card-status status-warning";
+            } else if (humidity > 80) {
+                humidityStatus.textContent = "Too High";
+                humidityStatus.className = "card-status status-danger";
+            } else {
+                humidityStatus.textContent = "Normal";
+                humidityStatus.className = "card-status status-normal";
+            }
+
+            // Soil moisture status
+            if (soil < 30) {
+                soilStatus.textContent = "Too Dry";
+                soilStatus.className = "card-status status-warning";
+            } else if (soil > 70) {
+                soilStatus.textContent = "Too Wet";
+                soilStatus.className = "card-status status-danger";
+            } else {
+                soilStatus.textContent = "Normal";
+                soilStatus.className = "card-status status-normal";
+            }
+
+            // Light intensity status
+            if (light < 1000) {
+                lightStatus.textContent = "Low Light";
+                lightStatus.className = "card-status status-warning";
+            } else if (light > 10000) {
+                lightStatus.textContent = "High Light";
+                lightStatus.className = "card-status status-danger";
+            } else {
+                lightStatus.textContent = "Normal";
+                lightStatus.className = "card-status status-normal";
+            }
+        }
+
+        // Update alerts based on sensor values
+        function updateAlerts(feed) {
+            const temp = parseFloat(feed.field1);
+            const humidity = parseFloat(feed.field2);
+            const soil = parseFloat(feed.field3);
+            const light = parseFloat(feed.field4);
+
+            let alerts = [];
+
+            if (temp < 10) {
+                alerts.push("Temperature is critically low. Risk of frost damage to crops.");
+            } else if (temp > 35) {
+                alerts.push("Temperature is critically high. Risk of heat stress to crops.");
+            }
+
+            if (humidity < 30) {
+                alerts.push("Humidity is very low. Consider irrigation to prevent plant stress.");
+            } else if (humidity > 85) {
+                alerts.push("High humidity detected. Risk of fungal diseases.");
+            }
+
+            if (soil < 20) {
+                alerts.push("Soil moisture is critically low. Immediate irrigation required.");
+            } else if (soil > 80) {
+                alerts.push("Soil is oversaturated. Risk of root rot. Check drainage.");
+            }
+
+            if (light < 500) {
+                alerts.push("Light intensity is very low. Consider supplemental lighting.");
+            } else if (light > 15000) {
+                alerts.push("Extreme light intensity. Risk of leaf burn.");
+            }
+
+            // Update the alerts list
+            if (alerts.length === 0) {
+                alertList.innerHTML = `
+                    <li class="alert-item">
+                        <i class="fas fa-check-circle alert-icon"></i>
+                        No active alerts at this time.
+                    </li>
+                `;
+            } else {
+                alertList.innerHTML = alerts.map(alert => `
+                    <li class="alert-item">
+                        <i class="fas fa-exclamation-triangle alert-icon"></i>
+                        ${alert}
+                    </li>
+                `).join('');
+            }
+        }
+
+        // Update AI recommendations based on sensor values
+        function updateRecommendations(feed) {
+            const temp = parseFloat(feed.field1);
+            const humidity = parseFloat(feed.field2);
+            const soil = parseFloat(feed.field3);
+            const light = parseFloat(feed.field4);
+
+            let recommendations = [];
+
+            if (temp < 18) {
+                recommendations.push("Consider using row covers to increase temperature around plants.");
+            } else if (temp > 28) {
+                recommendations.push("Consider shade cloth to protect plants from excessive heat.");
+            }
+
+            if (humidity < 45) {
+                recommendations.push("Increase humidity with misting or water trays.");
+            } else if (humidity > 75) {
+                recommendations.push("Improve ventilation to reduce humidity and prevent disease.");
+            }
+
+            if (soil < 35) {
+                recommendations.push("Initiate irrigation cycle to increase soil moisture.");
+            } else if (soil > 65) {
+                recommendations.push("Reduce irrigation frequency to prevent waterlogging.");
+            }
+
+            if (light < 2000) {
+                recommendations.push("Consider relocating plants to a sunnier area or using grow lights.");
+            } else if (light > 8000) {
+                recommendations.push("Provide partial shade during peak sunlight hours.");
+            }
+
+            // If all parameters are optimal
+            if (recommendations.length === 0) {
+                recommendations.push("All parameters are within optimal ranges.");
+            }
+
+            // Update the recommendations list
+            recommendationList.innerHTML = recommendations.map(rec => `
+                <li class="recommendation-item">
+                    <i class="fas fa-lightbulb recommendation-icon"></i>
+                    ${rec}
+                </li>
+            `).join('');
+        }
+
+        // Initialize the dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+
+</html>
